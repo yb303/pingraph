@@ -5,6 +5,7 @@ Ping graph - show a graph of ping round-trip times to multiple targets
 The graph is logarithmic. 1ms to 20s. Bars at 10ms, 100ms, 1s, 10s.
 
 #### TODO - some features that might be useful, and fixes
+- Ping times are worse than in command line. Like 4-6ms vs 2-3ms to a box on my home network. I guess this is C#'s fault?
 - The bars are a mess
 - Cleanup no-title experiments
 - Restore last window position
