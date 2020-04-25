@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Pingraph": {
-      "commandName": "Project",
-      "commandLineArgs": "C:\\temp\\pingraph.cfg"
-    }
-  }
-}

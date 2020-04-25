@@ -1,87 +1,132 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
+using System.Data;
 using System.Drawing;
-using System.Windows.Forms;
+using System.Drawing.Drawing2D;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Drawing.Drawing2D;
-using System.Security.Permissions;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
-/*
-//[System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Unicode)]
-//[System.Runtime.InteropServices.PreserveSig()]
-
-//[StructLayout(LayoutKind.Sequential, Pack = 1)]
-//[MarshalAs(UnmanagedType., SizeConst = 4)]
-public static struct RECT
+namespace PingGraph
 {
-    public UInt32 left;
-    public UInt32 top;
-    public UInt32 right;
-    public UInt32 bottom;
-};
-
-[System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Unicode)]
-[System.Runtime.InteropServices.PreserveSig()]
-public static bool AdjustWindowRectEx(
-   ref RECT lpRect,
-   uint dwStyle,
-   uint bMenu,
-   uint dwExStyle
-);
-*/
-
-namespace Pingraph
-{
-    class Clock
-    {
-        private static double m_tickPerNano = 1e6 / TimeSpan.TicksPerMillisecond;
-
-        public static double now()
-        {
-            return DateTime.Now.Ticks * m_tickPerNano;
-        }
-    };
-
-    class Pinger
-    {
-        public static uint capacity = 1024;
-
-        public Pen m_pen;
-        public IPAddress m_ip;
-        public string m_addr;
-
-        // Round trip time = recvTime - sendTime
-        public double[] m_rtt = new double[capacity];
-        public uint m_recv_pos = 0;
-
-        //private bool m_sending = false;
-        private Ping m_sender = new Ping();
-
-        public Pinger()
-        {
-            m_sender.PingCompleted += (sender, e) => this.onPingComplete(sender, e);
-        }
-
-        public void ping(uint pos, double now)
-        {
-            m_rtt[pos] = -now; // negative means no response yet
-            m_sender.SendAsync(m_ip, 20000);
-        }
-
-        public void onPingComplete(object sender, PingCompletedEventArgs e)
-        {
-            uint pos = m_recv_pos % capacity;
-            m_recv_pos++;
-            double rtt = m_rtt[pos] + Clock.now();
-            m_rtt[pos] = Math.Log10(Math.Max(1, rtt)); // positive, or 0, means we got a response
-            //System.Diagnostics.Debug.WriteLine($"ping return - {m_addr} {rtt}");
-        }
-    };
-
     public partial class Form1 : Form
     {
+        bool pingEnabled = true;
+        bool tooltipEnabled = true;
+
+        public Form1()
+        {
+            InitializeComponent();
+
+            //-- DIABLED BY NF: see how delegate is used
+            /*
+            tooltip = new ToolTip { ReshowDelay = 10 };
+            ContextMenuStrip mnu = new ContextMenuStrip { };
+            this.ContextMenuStrip = mnu;
+            ToolStripMenuItem mnuPause = new ToolStripMenuItem { Text = "Enable disable ping", ToolTipText = "Enable or disable pinging drawing", Checked = true };
+            mnuPause.Click += delegate
+            {
+                pingEnabled = !pingEnabled;
+                mnuPause.Checked = pingEnabled;
+            };
+
+            ToolStripMenuItem mnuToolTip = new ToolStripMenuItem { Text = "Enable Disable Tooltip", ToolTipText = "Enable or disable the tooltip over line", Checked = true };
+            mnuToolTip.Click += delegate
+            {
+                tooltipEnabled = !tooltipEnabled;
+                mnuToolTip.Checked = tooltipEnabled;
+
+                if (!tooltipEnabled)
+                {
+                    //tooltip.Hide();
+                    tooltip.SetToolTip(this, string.Empty);
+                }
+            };
+
+            
+            mnu.Items.AddRange(new ToolStripItem[] { mnuPause, mnuToolTip });
+
+            */
+
+            this.FormBorderStyle = FormBorderStyle.None;
+            toolTip1.SetToolTip(this, "Auby zuby");//-- NF: set something in the toolip
+                                                  //this.StartPosition = FormStartPosition.CenterScreen;
+
+            this.Text = "";
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.ControlBox = false;
+
+            this.DoubleBuffered = true;
+
+            readConfig();
+
+            m_blackPen = new Pen(Color.Black);
+            m_grayPen = new Pen(Color.LightGray);
+
+            m_timer = new Timer();
+            m_timer.Tick += onTimer;
+            m_timer.Interval = 1000;
+            m_timer.Enabled = true;
+
+            MouseDown += onMouseDown;
+            MouseMove += onMouseMove;
+            MouseUp += onMouseUp;
+        }
+        
+
+        class Clock
+        {
+            private static double m_tickPerNano = 1e6 / TimeSpan.TicksPerMillisecond;
+
+            public static double now()
+            {
+                return DateTime.Now.Ticks * m_tickPerNano;
+            }
+        };
+
+        class Pinger
+        {
+            public static uint capacity = 1024;
+
+            public Pen m_pen;
+            public IPAddress m_ip;
+            public string m_addr;
+
+            // Round trip time = recvTime - sendTime
+            public double[] m_rtt = new double[capacity];
+            public uint m_recv_pos = 0;
+
+            //private bool m_sending = false;
+            private Ping m_sender = new Ping();
+
+            public Pinger()
+            {
+                m_sender.PingCompleted += (sender, e) => this.onPingComplete(sender, e);
+            }
+
+            public void ping(uint pos, double now)
+            {
+                m_rtt[pos] = -now; // negative means no response yet
+                m_sender.SendAsync(m_ip, 20000);
+            }
+
+            public void onPingComplete(object sender, PingCompletedEventArgs e)
+            {
+                uint pos = m_recv_pos % capacity;
+                m_recv_pos++;
+                double rtt = m_rtt[pos] + Clock.now();
+                m_rtt[pos] = Math.Log10(Math.Max(1, rtt)); // positive, or 0, means we got a response
+                                                           //System.Diagnostics.Debug.WriteLine($"ping return - {m_addr} {rtt}");
+            }
+        };
+
+
+       
         System.Drawing.Pen m_blackPen;
         System.Drawing.Pen m_grayPen;
 
@@ -162,11 +207,12 @@ namespace Pingraph
             WS_EX_TRANSPARENT = 0x00000020,
             WS_EX_WINDOWEDGE = 0x00000100,
         };
+
         protected override CreateParams CreateParams
         {
             get
             {
-                new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Demand();
+                //new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Demand();
 
                 // Extend the CreateParams property of the Button class.
                 CreateParams cp = base.CreateParams;
@@ -179,30 +225,10 @@ namespace Pingraph
             }
         }
 
-        public Form1()
-        {
-            InitializeComponent();
-            this.Text = "";
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-            this.ControlBox = false;
+        //ToolTip tooltip;
 
-            this.DoubleBuffered = true;
 
-            readConfig();
-
-            m_blackPen = new Pen(Color.Black);
-            m_grayPen = new Pen(Color.LightGray);
-
-            m_timer = new Timer();
-            m_timer.Tick += onTimer;
-            m_timer.Interval = 1000;
-            m_timer.Enabled = true;
-
-            MouseDown += onMouseDown;
-            MouseMove += onMouseMove;
-            MouseUp += onMouseUp;
-        }
-
+    
         void errorBox(string msg)
         {
             MessageBox.Show(msg, "Pingraph - Error", MessageBoxButtons.OK);
@@ -210,22 +236,25 @@ namespace Pingraph
 
         void readConfig()
         {
-            string[] args = Environment.GetCommandLineArgs();
-            if (args.Length != 2)
-            {
-                errorBox("Expected config file in command line");
-                Application.Exit();
-            }
+           // string[] args = Environment.GetCommandLineArgs();
+            //if (args.Length != 2)
+            //{
+            //    errorBox("Expected config file in command line");
+            //    Application.Exit();
+            //}
 
             int lineNum = 0;
             string lineStr;
-
+            string cfgPath= Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "pingraph.cfg");
+            //if (!System.IO.File.Exists(args[1])) args[1] = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "pingraph.cfg");
             // Read the file and display it line by line.  
-            System.IO.StreamReader file = new System.IO.StreamReader(args[1]);
-            while ((lineStr = file.ReadLine()) != null)
+
+            string[] lines = File.ReadAllLines(cfgPath);
+            //System.IO.StreamReader file = new System.IO.StreamReader(cfgPath);
+            foreach(string sLine in lines)//((lineStr = file.ReadLine()) != null)
             {
                 lineNum++;
-                lineStr = lineStr.Trim();
+                lineStr = sLine.Trim();
                 if (lineStr.Length == 0 || lineStr[0] == '#')
                     continue;
 
@@ -237,7 +266,7 @@ namespace Pingraph
                 }
                 //else if (lineArgs[0] == "log")
             }
-            file.Close();
+           // file.Close();
         }
 
         private void initPinger(int lineNum, string[] lineArgs)
@@ -294,12 +323,14 @@ namespace Pingraph
         {
             base.OnPaint(e);
 
+            if (!pingEnabled) return;
+
             Graphics g = e.Graphics;
             g.CompositingMode = CompositingMode.SourceOver;
-            g.CompositingQuality = CompositingQuality.HighQuality;
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            g.SmoothingMode = SmoothingMode.HighQuality;
+            g.CompositingQuality = CompositingQuality.HighSpeed;
+            g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            g.PixelOffsetMode = PixelOffsetMode.Half;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
             int w = this.ClientSize.Width;
@@ -344,6 +375,7 @@ namespace Pingraph
                 if (t < 0)
                     continue;
 
+
                 double lastY = get_y(t);
                 double lastX = w - drawSeconds * xf;
 
@@ -369,6 +401,8 @@ namespace Pingraph
 
         private void onMouseMove(Object sender, MouseEventArgs e)
         {
+            if (tooltipEnabled) toolTip1.SetToolTip(this, $"{e.X} say something {e.Y}");
+
             if (m_draging)
             {
                 this.Location = new Point(Location.X - m_dragStart.X + e.X, Location.Y - m_dragStart.Y + e.Y);
@@ -380,5 +414,27 @@ namespace Pingraph
             m_draging = false;
         }
 
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void enablePingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            pingEnabled = !pingEnabled;
+            enablePingToolStripMenuItem.Checked = pingEnabled;
+        }
+
+        private void enableTooltipToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tooltipEnabled = !tooltipEnabled;
+            enableTooltipToolStripMenuItem.Checked = tooltipEnabled;
+
+            if (!tooltipEnabled)
+            {
+                //tooltip.Hide();
+                toolTip1.SetToolTip(this, string.Empty);
+            }
+        }
     }
 }
