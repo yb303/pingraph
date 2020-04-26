@@ -14,19 +14,15 @@ namespace PingGraph
 {
     public partial class Form1 : Form
     {
+        class CannotStartException : Exception {}
+
         class Clock
         {
             private static double m_tickPerNano = 1e9 / Stopwatch.Frequency;
-            private static Stopwatch m_stopwatch = new Stopwatch();
-
-            static Clock()
-            {
-                m_stopwatch.Start();
-            }
 
             public static double now()
             {
-                return m_stopwatch.ElapsedTicks * m_tickPerNano;
+                return Stopwatch.GetTimestamp() * m_tickPerNano;
             }
         };
 
@@ -172,35 +168,34 @@ namespace PingGraph
                 }
                 return;
             }
-            catch (Exception e)
-            {
-            }
+            catch (Exception) {}
 
-            if (cfgPath != defaultCfgPath || !File.Exists(cfgPath))
+            if (cfgPath != defaultCfgPath || File.Exists(cfgPath))
             {
                 errorBox($"Cannot read config file - {cfgPath}\n");
-                Application.Exit();
+                throw new CannotStartException();
             }
 
             bool ok = true;
             try
             {
-                File.WriteAllText(defaultCfgPath, "ping 127.0.0.1 ff0000\n");
+                File.WriteAllText(defaultCfgPath, "ping localhost ff0000\n");
                 ok = true;
             }
-            catch (Exception e) {}
+            catch (Exception) {}
 
             if (ok)
             {
                 errorBox($"Expected 'pingraph.cfg' in exe directory, or given in command line\n" +
-                         "Created minimal config - {defaultCfgPath}");
+                         $"Created minimal config - {defaultCfgPath}");
+                readConfig();
             }
             else
             {
                 errorBox($"Expected 'pingraph.cfg' in exe directory, or given in command line\n" +
-                         "Failed to create minimal config - {defaultCfgPath}");
+                         $"Failed to create minimal config - {defaultCfgPath}");
+                throw new CannotStartException();
             }
-            Application.Exit();
         }
 
         private void initPinger(int lineNum, string[] lineArgs)
@@ -250,16 +245,16 @@ namespace PingGraph
             Invalidate();
         }
 
-        private string timeString(double nanos)
+        private string timeString(double nanos, int decimals)
         {
             nanos += 0.5;
             double exp = Math.Log10(nanos);
             uint ts = (uint)exp / 3;
-            uint num = (uint)Math.Round(nanos / Math.Pow(10, ts * 3));
+            double num = Math.Round(nanos / Math.Pow(10, ts * 3), decimals);
 
             string[] suffixes = { "ns", "us", "ms", "s" };
 
-            return num.ToString() + suffixes[ts];
+            return $"{num}{suffixes[ts]}";
         }
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -344,7 +339,7 @@ namespace PingGraph
             for (uint y_bar = (uint)Math.Round(log_y_min); y_bar <= (uint)Math.Round(log_y_max); y_bar++)
             {
                 float y = get_y(y_bar);
-                g.DrawString(timeString(Math.Pow(10, y_bar)), this.Font, m_blackPen.Brush, 0, y);
+                g.DrawString(timeString(Math.Pow(10, y_bar), 0), this.Font, m_blackPen.Brush, 0, y);
             }
 
             // Min max labels
@@ -369,7 +364,7 @@ namespace PingGraph
                 int h = this.ClientRectangle.Height;
                 double yf = h / (log_y_max - log_y_min);
                 double log_y = Math.Pow(10, (h - e.Y) / yf + log_y_min);
-                m_toolTip.SetToolTip(this, timeString(log_y));
+                m_toolTip.SetToolTip(this, timeString(log_y, 2));
             }
         }
         private void onMouseUp(Object sender, MouseEventArgs e)
