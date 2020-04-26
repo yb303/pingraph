@@ -29,74 +29,87 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.enablePingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.enableTooltipToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.m_contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.m_menuEnablePing = new System.Windows.Forms.ToolStripMenuItem();
+            this.m_menuEnableTooltip = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.contextMenuStrip1.SuspendLayout();
+            this.m_menuExit = new System.Windows.Forms.ToolStripMenuItem();
+            this.m_toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.m_drawTimer = new System.Windows.Forms.Timer(this.components);
+            this.m_contextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
-            // contextMenuStrip1
+            // m_contextMenu
             // 
-            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.enablePingToolStripMenuItem,
-            this.enableTooltipToolStripMenuItem,
+            this.m_contextMenu.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.m_contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.m_menuEnablePing,
+            this.m_menuEnableTooltip,
             this.toolStripSeparator1,
-            this.exitToolStripMenuItem});
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(173, 82);
+            this.m_menuExit});
+            this.m_contextMenu.Name = "contextMenuStrip1";
+            this.m_contextMenu.Size = new System.Drawing.Size(148, 76);
             // 
-            // enablePingToolStripMenuItem
+            // m_menuEnablePing
             // 
-            this.enablePingToolStripMenuItem.Name = "enablePingToolStripMenuItem";
-            this.enablePingToolStripMenuItem.Size = new System.Drawing.Size(172, 24);
-            this.enablePingToolStripMenuItem.Text = "Enable Ping";
-            this.enablePingToolStripMenuItem.Click += new System.EventHandler(this.enablePingToolStripMenuItem_Click);
+            this.m_menuEnablePing.Name = "m_menuEnablePing";
+            this.m_menuEnablePing.Size = new System.Drawing.Size(147, 22);
+            this.m_menuEnablePing.Text = "Enable Ping";
+            this.m_menuEnablePing.Click += new System.EventHandler(this.onMenuEnablePing_Click);
             // 
-            // enableTooltipToolStripMenuItem
+            // m_menuEnableTooltip
             // 
-            this.enableTooltipToolStripMenuItem.Name = "enableTooltipToolStripMenuItem";
-            this.enableTooltipToolStripMenuItem.Size = new System.Drawing.Size(172, 24);
-            this.enableTooltipToolStripMenuItem.Text = "Enable tooltip";
-            this.enableTooltipToolStripMenuItem.Click += new System.EventHandler(this.enableTooltipToolStripMenuItem_Click);
+            this.m_menuEnableTooltip.Name = "m_menuEnableTooltip";
+            this.m_menuEnableTooltip.Size = new System.Drawing.Size(147, 22);
+            this.m_menuEnableTooltip.Text = "Enable tooltip";
+            this.m_menuEnableTooltip.Click += new System.EventHandler(this.onMenuEnableTooltip_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(169, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(144, 6);
             // 
-            // exitToolStripMenuItem
+            // m_menuExit
             // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(172, 24);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            this.m_menuExit.Name = "m_menuExit";
+            this.m_menuExit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
+            this.m_menuExit.Size = new System.Drawing.Size(147, 22);
+            this.m_menuExit.Text = "Exit";
+            this.m_menuExit.Click += new System.EventHandler(this.onMenuExit_Click);
+            // 
+            // m_drawTimer
+            // 
+            this.m_drawTimer.Enabled = true;
+            this.m_drawTimer.Interval = 1000;
+            this.m_drawTimer.Tick += new System.EventHandler(this.onDrawTimer);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.ContextMenuStrip = this.contextMenuStrip1;
+            this.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.ClientSize = new System.Drawing.Size(278, 156);
+            this.ContextMenuStrip = this.m_contextMenu;
+            this.ControlBox = false;
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
-            this.Text = "Form1";
-            this.contextMenuStrip1.ResumeLayout(false);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.onMouseDown);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.onMouseMove);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.onMouseUp);
+            this.m_contextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
-        private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.ToolStripMenuItem enablePingToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem enableTooltipToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip m_contextMenu;
+        private System.Windows.Forms.ToolTip m_toolTip;
+        private System.Windows.Forms.ToolStripMenuItem m_menuEnablePing;
+        private System.Windows.Forms.ToolStripMenuItem m_menuEnableTooltip;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem m_menuExit;
+        private System.Windows.Forms.Timer m_drawTimer;
     }
 }
 
