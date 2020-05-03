@@ -48,32 +48,34 @@
             this.toolStripSeparator1,
             this.m_menuExit});
             this.m_contextMenu.Name = "contextMenuStrip1";
-            this.m_contextMenu.Size = new System.Drawing.Size(148, 76);
+            this.m_contextMenu.Size = new System.Drawing.Size(188, 76);
             // 
             // m_menuEnablePing
             // 
             this.m_menuEnablePing.Name = "m_menuEnablePing";
-            this.m_menuEnablePing.Size = new System.Drawing.Size(147, 22);
+            this.m_menuEnablePing.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
+            this.m_menuEnablePing.Size = new System.Drawing.Size(187, 22);
             this.m_menuEnablePing.Text = "Enable Ping";
             this.m_menuEnablePing.Click += new System.EventHandler(this.onMenuEnablePing_Click);
             // 
             // m_menuEnableTooltip
             // 
             this.m_menuEnableTooltip.Name = "m_menuEnableTooltip";
-            this.m_menuEnableTooltip.Size = new System.Drawing.Size(147, 22);
+            this.m_menuEnableTooltip.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
+            this.m_menuEnableTooltip.Size = new System.Drawing.Size(187, 22);
             this.m_menuEnableTooltip.Text = "Enable tooltip";
             this.m_menuEnableTooltip.Click += new System.EventHandler(this.onMenuEnableTooltip_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(144, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(184, 6);
             // 
             // m_menuExit
             // 
             this.m_menuExit.Name = "m_menuExit";
             this.m_menuExit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.m_menuExit.Size = new System.Drawing.Size(147, 22);
+            this.m_menuExit.Size = new System.Drawing.Size(187, 22);
             this.m_menuExit.Text = "Exit";
             this.m_menuExit.Click += new System.EventHandler(this.onMenuExit_Click);
             // 
@@ -88,7 +90,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.ClientSize = new System.Drawing.Size(278, 156);
+            this.ClientSize = new System.Drawing.Size(277, 156);
             this.ContextMenuStrip = this.m_contextMenu;
             this.ControlBox = false;
             this.Margin = new System.Windows.Forms.Padding(2);

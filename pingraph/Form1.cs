@@ -12,6 +12,14 @@ using System.Windows.Forms;
 
 namespace PingGraph
 {
+    static class Extension
+    {
+        public static T[] Slice<T>(this T[] a, int start, int end)
+        {
+            return a.Take(end).Skip(start).ToArray();
+        }
+    }
+
     public partial class Form1 : Form
     {
         class CannotStartException : Exception {}
@@ -40,13 +48,21 @@ namespace PingGraph
             private uint m_recv_pos = 0;
 
             private Ping m_sender;
+            private int m_timeout;
 
             public Pinger(Form1 form, string addr, string cfg_color)
             {
                 m_form = form;
 
                 m_addr = addr;
-                m_ip = Dns.GetHostAddresses(addr)[0];
+                try
+                {
+                    m_ip = Dns.GetHostAddresses(addr)[0];
+                }
+                catch (Exception)
+                {
+                }
+                m_timeout = (int)(Form1.y_max * 1e-6 * 2);
 
                 Color color = System.Drawing.ColorTranslator.FromHtml("#ff" + cfg_color);
                 m_pen = new System.Drawing.Pen(color);
@@ -56,6 +72,15 @@ namespace PingGraph
 
             public void prep()
             {
+                try
+                {
+                    if (m_ip.Equals(IPAddress.None))
+                        m_ip = Dns.GetHostAddresses(m_addr)[0];
+                }
+                catch(Exception)
+                {
+                }
+
                 m_sender = new Ping();
                 m_sender.PingCompleted += onPingComplete;
             }
@@ -63,30 +88,29 @@ namespace PingGraph
             public void send(uint pos, double now)
             {
                 m_rtt[pos] = -now; // negative means no response yet
-                m_sender.SendAsync(m_ip, 20000);
+                try
+                {
+                    m_sender.SendAsync(m_ip, m_timeout);
+                }
+                catch(Exception)
+                {
+                    m_recv_pos++;
+                }
             }
 
             public void onPingComplete(object sender, PingCompletedEventArgs e)
             {
                 uint pos = m_recv_pos++ % capacity;
+                if (e.Reply.Status != IPStatus.Success)
+                    return;
                 double rtt = m_rtt[pos] + Clock.now();
                 m_rtt[pos] = Math.Log10(Math.Max(1, rtt)); // positive, or 0, means we got a response
                 m_form.Invalidate();
             }
 
-            public bool hasRtt(uint pos)
+            public double getRtt(uint pos)
             {
-                return m_rtt[pos % Pinger.capacity] > 0;
-            }
-
-            public double getRtt(uint pos, double now)
-            {
-                double t = m_rtt[pos % Pinger.capacity];
-                if (t == 0)
-                    t = 0;
-                else if (t <= 0)
-                    t = Math.Log10(Math.Max(1, now + t));
-                return t;
+                return m_rtt[pos % Pinger.capacity];
             }
         };
 
@@ -102,8 +126,8 @@ namespace PingGraph
 
         bool m_tooltipEnabled = false;
 
-        static double y_min = 1e6; // 1ms
-        static double y_max = 20e9; // 20s
+        static public double y_min = 1e6; // 1ms
+        static public double y_max = 20e9; // 20s
         static double log_y_min = Math.Log10(y_min);
         static double log_y_max = Math.Log10(y_max);
 
@@ -132,8 +156,7 @@ namespace PingGraph
 
             m_pingTimer = new System.Threading.Timer(onPingTimer, null, 1000, 1000);
         }
-
-
+ 
         void errorBox(string msg)
         {
             MessageBox.Show(msg, "Pingraph - Error", MessageBoxButtons.OK);
@@ -289,7 +312,7 @@ namespace PingGraph
             uint send_pos = m_send_pos;
             bool send_pos_ok = false;
             foreach (Pinger pinger in m_pingers)
-                send_pos_ok = pinger.hasRtt(send_pos);
+                send_pos_ok = pinger.getRtt(send_pos) >= 0;
             if (send_pos > 0 && !send_pos_ok)
                 send_pos--;
 
@@ -320,19 +343,31 @@ namespace PingGraph
 
             foreach (Pinger pinger in m_pingers)
             {
-                double t = pinger.getRtt(start, now);
-                points[0].X = (float)(w - seconds * xf);
-                points[0].Y = get_y(t);
-
-                for (uint i = 1; i <= seconds; i++)
+                int valid = -1;
+                float x = (float)(w - seconds * xf);
+                for (int i = 0; i <= seconds; i++)
                 {
-                    PointF prev = points[i - 1];
-                    t = pinger.getRtt(start + i, now);
-                    points[i].X = prev.X + (float)xf;
-                    points[i].Y = get_y(t);
+                    x += (float)xf;
+                    double t = pinger.getRtt(start + (uint)i);
+                    if (t >= 0)
+                    {
+                        points[i].X = x;
+                        points[i].Y = get_y(t);
+                        if (valid == -1) // switch to valid
+                            valid = i;
+                    }
+                    else if (valid > -1) // was valid - draw line
+                    {
+                        if (i - valid > 1)
+                            g.DrawLines(pinger.m_pen, points.Slice(valid, i));
+                        valid = -1;
+                    }
                 }
-
-                g.DrawLines(pinger.m_pen, points);
+                if (valid > -1) // was valid - draw line
+                {
+                    if (seconds - valid > 1)
+                        g.DrawLines(pinger.m_pen, points.Slice(valid, (int)seconds));
+                }
             }
 
             // Bar labels
