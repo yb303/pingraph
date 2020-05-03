@@ -9,11 +9,13 @@ The graph is logarithmic. 1ms to 20s. Bars at 10ms, 100ms, 1s, 10s.
 - ~The bars are a mess~
 - ~Cleanup no-title experiments~
 - Restore last window position
-- Re-resolve dns when host unreachable
+- ~Re-resolve dns when host unreachable~
+- The title bar is not completely gone
 - Minor graphics issues
   - ~Graph not properly aligned to right (latest pings not returned yet...)~
-  - The title bar is not completely gone
   - ~Could be more efficient with a single DrawLines with array of points~
+  - ~Artifacts~
+  - ~No proper gap when ping times out~
 - More graphics
   - ~Labels on vertical axis~
   - Moving label on horizontal axis, every X seconds
